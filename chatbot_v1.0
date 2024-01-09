@@ -82,7 +82,7 @@ def get_user_choice() -> str:
 
 def get_training_question() -> str:
     """Get a training question from the user."""
-    return input("Enter the question (or type 'menu' to return to main menu): ").lower().strip()
+    return input("Enter the question (or type 'menu:' to return to main menu): ").lower().strip()
 
 def get_training_answer() -> Optional[str]:
     """Get a training answer from the user."""
@@ -94,13 +94,13 @@ def get_training_answer() -> Optional[str]:
 
 def get_user_question() -> str:
     """Get a question from the user."""
-    return input("What is your question? (or type 'menu' to return to main menu): ").lower().strip()
+    return input("What is your question? (or type 'menu:' to return to main menu): ").lower().strip()
 
 def train_ai_loop(dictionary: Dict[str, List[str]]):
     """Training loop for the AI."""
     while True:
         question = get_training_question()
-        if question == 'menu':
+        if question == 'menu:':
             break
         answer = get_training_answer()
         if answer:
@@ -115,7 +115,7 @@ def ask_ai_loop(dictionary: Dict[str, List[str]]):
             show_all_answers(user_question[5:].strip(), dictionary)
         elif user_question.startswith('search:'):
             search_question(user_question[7:].strip(), dictionary)
-        elif user_question == 'menu':
+        elif user_question == 'menu:':
             break
         else:
             answer_question(user_question, dictionary)
