@@ -1,4 +1,4 @@
-import csv
+import json  # Changed from 'import csv' to 'import json'
 import os
 import random
 import time
@@ -8,10 +8,12 @@ import Levenshtein
 
 # Constants
 SIMILARITY_THRESHOLD = 0.7
-DATA_FILE = 'ai_data.csv'
+DATA_FILE = 'ai_data.json'  # Changed file extension to .json
 MAX_ATTEMPTS = 3
 TYPEWRITER_EFFECT_ON = True  # Set to False to disable typewriter effect
 TYPEWRITER_SPEED = 0.05  # Time delay between characters
+SHOW_TRAIN_AI_OPTION = True  # Set to False to hide Train AI from the menu
+SHOW_ASK_AI_OPTION = True  # Set to False to hide Ask AI from the menu
 
 # Setup basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -40,7 +42,7 @@ def find_closest_match(user_question: str, dictionary: Dict[str, List[str]]) -> 
     return closest_match if highest_similarity > SIMILARITY_THRESHOLD else None
 
 def load_ai_data(filepath: str) -> Dict[str, List[str]]:
-    """Load AI data from a CSV file."""
+    """Load AI data from a JSON file."""
     attempts = 0
     while attempts < MAX_ATTEMPTS:
         try:
@@ -49,8 +51,7 @@ def load_ai_data(filepath: str) -> Dict[str, List[str]]:
                 return {}
 
             with open(filepath, mode='r', encoding='utf-8') as file:
-                reader = csv.reader(file)
-                return {row[0].lower(): row[1].split('|') for row in reader if len(row) == 2}
+                return json.load(file)
         except IOError as e:
             logging.error(f"IOError loading data: {e}")
             attempts += 1
@@ -59,14 +60,12 @@ def load_ai_data(filepath: str) -> Dict[str, List[str]]:
             return {}
 
 def save_ai_data(dictionary: Dict[str, List[str]], filepath: str):
-    """Save AI data to a CSV file."""
+    """Save AI data to a JSON file."""
     attempts = 0
     while attempts < MAX_ATTEMPTS:
         try:
-            with open(filepath, mode='w', encoding='utf-8', newline='') as file:
-                writer = csv.writer(file)
-                for question, answers in dictionary.items():
-                    writer.writerow([question, '|'.join(answers)])
+            with open(filepath, mode='w', encoding='utf-8') as file:
+                json.dump(dictionary, file, ensure_ascii=False, indent=4)
                 break
         except IOError as e:
             logging.error(f"IOError saving data: {e}")
@@ -76,13 +75,20 @@ def save_ai_data(dictionary: Dict[str, List[str]], filepath: str):
 
 def get_user_choice() -> str:
     """Get user choice from the menu."""
-    menu = "\nAI Assistant\n1. Train AI\n2. Ask AI\n3. Exit"
+    menu_options = []
+    if SHOW_TRAIN_AI_OPTION:
+        menu_options.append("1. Train AI")
+    if SHOW_ASK_AI_OPTION:
+        menu_options.append("2. Ask AI")
+    menu_options.append("3. Exit")
+
+    menu = "\nAI Assistant\n" + "\n".join(menu_options)
     typewriter_effect(menu)
     return input("Choose an option: ").strip()
 
 def get_training_question() -> str:
     """Get a training question from the user."""
-    return input("Enter the question (or type 'menu:' to return to main menu): ").lower().strip()
+    return input("Enter the question (or type 'menu:', 'clear:', 'exit:', 'commands:' to return to main menu): ").lower().strip()
 
 def get_training_answer() -> Optional[str]:
     """Get a training answer from the user."""
@@ -94,7 +100,7 @@ def get_training_answer() -> Optional[str]:
 
 def get_user_question() -> str:
     """Get a question from the user."""
-    return input("What is your question? (or type 'menu:' to return to main menu): ").lower().strip()
+    return input("What is your question? (or type 'menu:', 'clear:', 'exit:', 'commands:' to return to main menu): ").lower().strip()
 
 def train_ai_loop(dictionary: Dict[str, List[str]]):
     """Training loop for the AI."""
@@ -102,10 +108,19 @@ def train_ai_loop(dictionary: Dict[str, List[str]]):
         question = get_training_question()
         if question == 'menu:':
             break
-        answer = get_training_answer()
-        if answer:
-            dictionary.setdefault(question, []).append(answer)
-            typewriter_effect("Training complete.")
+        elif question == 'clear:':
+            os.system('cls' if os.name == 'nt' else 'clear')
+        elif question == 'exit:':
+            exit()
+        elif question == 'commands:':
+            display_commands('train')
+        elif question.endswith(':'):
+            typewriter_effect("Command not allowed in training mode.")
+        else:
+            answer = get_training_answer()
+            if answer:
+                dictionary.setdefault(question, []).append(answer)
+                typewriter_effect("Training complete.")
 
 def ask_ai_loop(dictionary: Dict[str, List[str]]):
     """Loop for asking questions to the AI."""
@@ -117,8 +132,21 @@ def ask_ai_loop(dictionary: Dict[str, List[str]]):
             search_question(user_question[7:].strip(), dictionary)
         elif user_question == 'menu:':
             break
+        elif user_question == 'clear:':
+            os.system('cls' if os.name == 'nt' else 'clear')
+        elif user_question == 'exit:':
+            exit()
+        elif user_question == 'commands:':
+            display_commands('ask')
         else:
             answer_question(user_question, dictionary)
+
+def display_commands(context: str):
+    """Display available commands based on the context."""
+    commands = ["menu:", "clear:", "exit:", "commands:"]
+    if context == 'ask':
+        commands.extend(["show:", "search:"])
+    typewriter_effect("Available commands:\n" + "\n".join(commands))
 
 def show_all_answers(question: str, dictionary: Dict[str, List[str]]):
     """Show all answers for a given question."""
@@ -152,10 +180,10 @@ def main():
 
     while True:
         choice = get_user_choice()
-        if choice == '1':
+        if choice == '1' and SHOW_TRAIN_AI_OPTION:
             train_ai_loop(ai_dictionary)
             save_ai_data(ai_dictionary, DATA_FILE)
-        elif choice == '2':
+        elif choice == '2' and SHOW_ASK_AI_OPTION:
             ask_ai_loop(ai_dictionary)
         elif choice == '3':
             break
