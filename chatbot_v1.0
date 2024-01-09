@@ -1,41 +1,46 @@
 import csv
 import os
 import random
+import time
+import logging
 from typing import Dict, List, Optional
 import Levenshtein
-import logging
 
 # Constants
 SIMILARITY_THRESHOLD = 0.7
 DATA_FILE = 'ai_data.csv'
-MAX_ATTEMPTS = 3  # Maximum attempts for file operations
+MAX_ATTEMPTS = 3
+TYPEWRITER_EFFECT_ON = True  # Set to False to disable typewriter effect
+TYPEWRITER_SPEED = 0.05  # Time delay between characters
 
 # Setup basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def main():
-    ai_dictionary = load_ai_data(DATA_FILE)
+def typewriter_effect(text: str):
+    """Print text with a typewriter effect."""
+    if TYPEWRITER_EFFECT_ON:
+        for char in text:
+            print(char, end='', flush=True)
+            time.sleep(TYPEWRITER_SPEED)
+        print()
+    else:
+        print(text)
 
-    while True:
-        choice = get_user_choice()
-        if choice == '1':
-            train_ai_loop(ai_dictionary)
-            save_ai_data(ai_dictionary, DATA_FILE)
-        elif choice == '2':
-            ask_ai_loop(ai_dictionary)
-        elif choice == '3':
-            break
-        else:
-            print("Invalid choice. Please try again.")
+def find_closest_match(user_question: str, dictionary: Dict[str, List[str]]) -> Optional[str]:
+    """Find the closest match for a user question in the dictionary."""
+    highest_similarity = SIMILARITY_THRESHOLD
+    closest_match = None
 
-def get_user_choice() -> str:
-    """Displays the main menu and returns the user's choice."""
-    menu = "\nAI Assistant\n1. Train AI\n2. Ask AI\n3. Exit"
-    print(menu)
-    return input("Choose an option: ").strip()
+    for trained_question in dictionary:
+        similarity = Levenshtein.ratio(user_question, trained_question)
+        if similarity > highest_similarity:
+            highest_similarity = similarity
+            closest_match = trained_question
+
+    return closest_match if highest_similarity > SIMILARITY_THRESHOLD else None
 
 def load_ai_data(filepath: str) -> Dict[str, List[str]]:
-    """Loads AI data from a CSV file. Returns a dictionary with questions and answers."""
+    """Load AI data from a CSV file."""
     attempts = 0
     while attempts < MAX_ATTEMPTS:
         try:
@@ -54,7 +59,7 @@ def load_ai_data(filepath: str) -> Dict[str, List[str]]:
             return {}
 
 def save_ai_data(dictionary: Dict[str, List[str]], filepath: str):
-    """Saves AI data to a CSV file."""
+    """Save AI data to a CSV file."""
     attempts = 0
     while attempts < MAX_ATTEMPTS:
         try:
@@ -69,8 +74,30 @@ def save_ai_data(dictionary: Dict[str, List[str]], filepath: str):
         except Exception as e:
             logging.error(f"Unexpected error saving data: {e}")
 
+def get_user_choice() -> str:
+    """Get user choice from the menu."""
+    menu = "\nAI Assistant\n1. Train AI\n2. Ask AI\n3. Exit"
+    typewriter_effect(menu)
+    return input("Choose an option: ").strip()
+
+def get_training_question() -> str:
+    """Get a training question from the user."""
+    return input("Enter the question (or type 'menu' to return to main menu): ").lower().strip()
+
+def get_training_answer() -> Optional[str]:
+    """Get a training answer from the user."""
+    answer = input("Enter the answer: ").strip()
+    if not answer:
+        typewriter_effect("Answer cannot be empty.")
+        return None
+    return answer
+
+def get_user_question() -> str:
+    """Get a question from the user."""
+    return input("What is your question? (or type 'menu' to return to main menu): ").lower().strip()
+
 def train_ai_loop(dictionary: Dict[str, List[str]]):
-    """Handles the loop for training the AI."""
+    """Training loop for the AI."""
     while True:
         question = get_training_question()
         if question == 'menu':
@@ -78,50 +105,62 @@ def train_ai_loop(dictionary: Dict[str, List[str]]):
         answer = get_training_answer()
         if answer:
             dictionary.setdefault(question, []).append(answer)
-            print("Training complete.")
-
-def get_training_question() -> str:
-    """Gets a training question from the user."""
-    return input("Enter the question (or type 'menu' to return to main menu): ").lower().strip()
-
-def get_training_answer() -> Optional[str]:
-    """Gets an answer for training from the user."""
-    answer = input("Enter the answer: ").strip()
-    if not answer:
-        print("Answer cannot be empty.")
-        return None
-    return answer
+            typewriter_effect("Training complete.")
 
 def ask_ai_loop(dictionary: Dict[str, List[str]]):
-    """Handles the loop for asking questions to the AI."""
+    """Loop for asking questions to the AI."""
     while True:
         user_question = get_user_question()
-        if user_question == 'menu':
+        if user_question.startswith('show:'):
+            show_all_answers(user_question[5:].strip(), dictionary)
+        elif user_question.startswith('search:'):
+            search_question(user_question[7:].strip(), dictionary)
+        elif user_question == 'menu':
             break
-
-        closest_match = find_closest_match(user_question, dictionary)
-        if closest_match:
-            answer = random.choice(dictionary[closest_match])
-            print(f"AI: {answer}")
         else:
-            print("AI: I don't know the answer to that. Please train me.")
+            answer_question(user_question, dictionary)
 
-def get_user_question() -> str:
-    """Gets a question from the user for the AI."""
-    return input("What is your question? (or type 'menu' to return to main menu): ").lower().strip()
+def show_all_answers(question: str, dictionary: Dict[str, List[str]]):
+    """Show all answers for a given question."""
+    match = find_closest_match(question, dictionary)
+    if match:
+        typewriter_effect("\n".join(dictionary[match]))
+    else:
+        typewriter_effect("No answers found for this question.")
 
-def find_closest_match(user_question: str, dictionary: Dict[str, List[str]]) -> Optional[str]:
-    """Finds the closest match for a user question from the trained data."""
-    highest_similarity = SIMILARITY_THRESHOLD
-    closest_match = None
+def search_question(keyword: str, dictionary: Dict[str, List[str]]):
+    """Search for questions containing a specific keyword."""
+    found_questions = [q for q in dictionary if keyword in q]
+    if found_questions:
+        for question in found_questions:
+            typewriter_effect(f"Question: {question}\nAnswers: {' | '.join(dictionary[question])}")
+    else:
+        typewriter_effect("No related questions found.")
 
-    for trained_question in dictionary:
-        similarity = Levenshtein.ratio(user_question, trained_question)
-        if similarity > highest_similarity:
-            highest_similarity = similarity
-            closest_match = trained_question
+def answer_question(user_question: str, dictionary: Dict[str, List[str]]):
+    """Provide an answer to the user's question."""
+    closest_match = find_closest_match(user_question, dictionary)
+    if closest_match:
+        answer = random.choice(dictionary[closest_match])
+        typewriter_effect(f"AI: {answer}")
+    else:
+        typewriter_effect("AI: I don't know the answer to that. Please train me.")
 
-    return closest_match if highest_similarity > SIMILARITY_THRESHOLD else None
+def main():
+    """Main function to run the AI Assistant."""
+    ai_dictionary = load_ai_data(DATA_FILE)
+
+    while True:
+        choice = get_user_choice()
+        if choice == '1':
+            train_ai_loop(ai_dictionary)
+            save_ai_data(ai_dictionary, DATA_FILE)
+        elif choice == '2':
+            ask_ai_loop(ai_dictionary)
+        elif choice == '3':
+            break
+        else:
+            typewriter_effect("Invalid choice. Please try again.")
 
 if __name__ == "__main__":
     main()
