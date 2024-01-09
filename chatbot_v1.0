@@ -1,19 +1,20 @@
-import json  # Changed from 'import csv' to 'import json'
+import json
 import os
 import random
 import time
 import logging
+import sys  # Import sys for handling the KeyboardInterrupt
 from typing import Dict, List, Optional
 import Levenshtein
 
 # Constants
 SIMILARITY_THRESHOLD = 0.7
-DATA_FILE = 'ai_data.json'  # Changed file extension to .json
+DATA_FILE = 'ai_data.json'
 MAX_ATTEMPTS = 3
-TYPEWRITER_EFFECT_ON = True  # Set to False to disable typewriter effect
-TYPEWRITER_SPEED = 0.05  # Time delay between characters
-SHOW_TRAIN_AI_OPTION = True  # Set to False to hide Train AI from the menu
-SHOW_ASK_AI_OPTION = True  # Set to False to hide Ask AI from the menu
+TYPEWRITER_EFFECT_ON = True
+TYPEWRITER_SPEED = 0.05
+SHOW_TRAIN_AI_OPTION = True
+SHOW_ASK_AI_OPTION = True
 
 # Setup basic logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -176,19 +177,24 @@ def answer_question(user_question: str, dictionary: Dict[str, List[str]]):
 
 def main():
     """Main function to run the AI Assistant."""
-    ai_dictionary = load_ai_data(DATA_FILE)
+    try:
+        ai_dictionary = load_ai_data(DATA_FILE)
 
-    while True:
-        choice = get_user_choice()
-        if choice == '1' and SHOW_TRAIN_AI_OPTION:
-            train_ai_loop(ai_dictionary)
-            save_ai_data(ai_dictionary, DATA_FILE)
-        elif choice == '2' and SHOW_ASK_AI_OPTION:
-            ask_ai_loop(ai_dictionary)
-        elif choice == '3':
-            break
-        else:
-            typewriter_effect("Invalid choice. Please try again.")
+        while True:
+            choice = get_user_choice()
+            if choice == '1' and SHOW_TRAIN_AI_OPTION:
+                train_ai_loop(ai_dictionary)
+                save_ai_data(ai_dictionary, DATA_FILE)
+            elif choice == '2' and SHOW_ASK_AI_OPTION:
+                ask_ai_loop(ai_dictionary)
+            elif choice == '3':
+                break
+            else:
+                typewriter_effect("Invalid choice. Please try again.")
+    except KeyboardInterrupt:
+        print("\nExiting program gracefully...")
+        # Add any additional cleanup or saving tasks here if needed
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
