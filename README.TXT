@@ -1,44 +1,45 @@
 AI Assistant
+Description
 
-This Python script provides an interactive AI Assistant capable of learning from user inputs and answering questions based on its training data. It utilizes a CSV file to store and retrieve training data and features a typewriter effect for displaying output.
-Features
+This Python script implements an interactive AI Assistant that can be trained with question-answer pairs and can respond to user queries based on its training. It features a typewriter effect for displaying text, a simple user interface, and persistent data storage.
+Requirements
 
-    Training Mode: Users can input questions and corresponding answers to train the AI.
-    Query Mode: Users can ask questions and receive answers based on the AI's training.
-    Data Persistence: Training data is saved in and loaded from a CSV file.
-    Typewriter Effect: Enhances user experience with a typewriter-like display of text (can be toggled off).
-    Search Functionality: Allows users to search for questions containing specific keywords.
-    Show Answers: Displays all answers for a specific question.
-    Menu Navigation: Easy navigation through a simple menu interface.
+    Python 3.x
+    Levenshtein library (for string similarity calculation)
 
 Installation
 
-Install the Levenshtein library required for string similarity calculations:
+    Ensure Python 3.x is installed.
+    Install the Levenshtein library using pip:
 
-bash
-
-pip install python-Levenshtein
+    pip install python-Levenshtein
 
 Usage
 
-Run the script in a Python environment. The main menu offers several options:
+Run the script in a Python environment:
 
-    Train AI: Input a question and an answer to train the AI.
-    Ask AI: Pose a question to the AI and receive an answer based on its training.
-    Exit: Exit the application.
+python ai_assistant_v1.0.py
 
-Additional Commands in Query Mode
+Menu Options
 
-    show: [question]: Show all answers for a specific question.
-    search: [keyword]: Search for questions containing a given keyword.
-    menu: Return to the main menu at any point.
+    Train AI: Enter question-answer pairs to train the AI.
+    Ask AI: Ask questions and get answers based on the training.
+    Exit: Quit the application.
 
-Typewriter Effect
+Training the AI
 
-The typewriter effect is enabled by default. To disable it, set TYPEWRITER_EFFECT_ON to False in the script.
-CSV Data File Format
+    Enter questions and corresponding answers.
+    Use commands like 'menu:', 'clear:', 'exit:', 'commands:' for additional actions.
 
-The script reads and writes to a CSV file named ai_data.csv. Each line represents a question-answer pair, separated by a comma. Answers to the same question are concatenated using a vertical bar (|) as a separator.
-Logging
+Asking Questions
 
-Basic logging is enabled for tracking the application's operation and any errors that occur, especially during file operations.
+    Type your question to get an answer from the AI.
+    Use special commands like 'show:', 'search:', in addition to standard ones for enhanced interaction.
+
+Configuration
+
+Modify the constants at the beginning of the script to change settings like similarity threshold, typewriter effect, etc.
+Troubleshooting
+
+    If the AI does not respond correctly, consider training it with more data.
+    Ensure the ai_data.json file is in the same directory as the script for data persistence.
