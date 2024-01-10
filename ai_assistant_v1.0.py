@@ -29,6 +29,15 @@ def typewriter_effect(text: str):
     else:
         print(text)
 
+def clear_screen():
+    """Clear the console screen."""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def press_enter_to_continue():
+    """Pause execution and wait for the user to press Enter, then clear the screen."""
+    input("Press Enter to continue...")
+    clear_screen()
+
 def find_closest_matches(user_question: str, dictionary: Dict[str, List[str]]) -> List[str]:
     """Find a list of close matches for a user question in the dictionary."""
     matches = []
@@ -73,7 +82,7 @@ def save_ai_data(dictionary: Dict[str, List[str]], filepath: str):
             logging.error(f"Unexpected error saving data: {e}")
 
 def get_user_choice() -> str:
-    """Get user choice from the menu."""
+    """Get user choice from the menu, clear screen after choice."""
     menu_options = []
     if SHOW_TRAIN_AI_OPTION:
         menu_options.append("1. Train AI")
@@ -83,7 +92,9 @@ def get_user_choice() -> str:
 
     menu = "\nAI Assistant\n" + "\n".join(menu_options)
     typewriter_effect(menu)
-    return input("Choose an option: ").strip()
+    choice = input("Choose an option: ").strip()
+    clear_screen()
+    return choice
 
 def get_training_question() -> str:
     """Get a training question from the user."""
@@ -106,9 +117,10 @@ def train_ai_loop(dictionary: Dict[str, List[str]]):
     while True:
         question = get_training_question()
         if question == 'menu:':
+            clear_screen()
             break
         elif question == 'clear:':
-            os.system('cls' if os.name == 'nt' else 'clear')
+            clear_screen()
         elif question == 'exit:':
             exit()
         elif question == 'commands:':
@@ -120,25 +132,30 @@ def train_ai_loop(dictionary: Dict[str, List[str]]):
             if answer:
                 dictionary.setdefault(question, []).append(answer)
                 typewriter_effect("Training complete.")
+                press_enter_to_continue()
 
 def ask_ai_loop(dictionary: Dict[str, List[str]]):
     """Loop for asking questions to the AI."""
     while True:
         user_question = get_user_question()
-        if user_question.startswith('show:'):
+        if user_question == 'menu:':
+            clear_screen()
+            break
+        elif user_question.startswith('show:'):
             show_all_answers(user_question[5:].strip(), dictionary)
+            press_enter_to_continue()
         elif user_question.startswith('search:'):
             search_question(user_question[7:].strip(), dictionary)
-        elif user_question == 'menu:':
-            break
+            press_enter_to_continue()
         elif user_question == 'clear:':
-            os.system('cls' if os.name == 'nt' else 'clear')
+            clear_screen()
         elif user_question == 'exit:':
             exit()
         elif user_question == 'commands:':
             display_commands('ask')
         else:
             answer_question(user_question, dictionary)
+            press_enter_to_continue()
 
 def display_commands(context: str):
     """Display available commands based on the context."""
