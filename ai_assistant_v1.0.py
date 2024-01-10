@@ -3,12 +3,12 @@ import os
 import random
 import time
 import logging
-import sys  # Import sys for handling the KeyboardInterrupt
+import sys
 from typing import Dict, List, Optional
 import Levenshtein
 
 # Constants
-SIMILARITY_THRESHOLD = 0.7
+SIMILARITY_THRESHOLD = 0.6  # Lowered to increase matching flexibility
 DATA_FILE = 'ai_data.json'
 MAX_ATTEMPTS = 3
 TYPEWRITER_EFFECT_ON = True
@@ -29,18 +29,16 @@ def typewriter_effect(text: str):
     else:
         print(text)
 
-def find_closest_match(user_question: str, dictionary: Dict[str, List[str]]) -> Optional[str]:
-    """Find the closest match for a user question in the dictionary."""
-    highest_similarity = SIMILARITY_THRESHOLD
-    closest_match = None
+def find_closest_matches(user_question: str, dictionary: Dict[str, List[str]]) -> List[str]:
+    """Find a list of close matches for a user question in the dictionary."""
+    matches = []
 
     for trained_question in dictionary:
         similarity = Levenshtein.ratio(user_question, trained_question)
-        if similarity > highest_similarity:
-            highest_similarity = similarity
-            closest_match = trained_question
+        if similarity > SIMILARITY_THRESHOLD:
+            matches.append(trained_question)
 
-    return closest_match if highest_similarity > SIMILARITY_THRESHOLD else None
+    return matches
 
 def load_ai_data(filepath: str) -> Dict[str, List[str]]:
     """Load AI data from a JSON file."""
@@ -151,9 +149,10 @@ def display_commands(context: str):
 
 def show_all_answers(question: str, dictionary: Dict[str, List[str]]):
     """Show all answers for a given question."""
-    match = find_closest_match(question, dictionary)
-    if match:
-        typewriter_effect("\n".join(dictionary[match]))
+    matches = find_closest_matches(question, dictionary)
+    if matches:
+        for match in matches:
+            typewriter_effect(f"Question: {match}\nAnswers: {' | '.join(dictionary[match])}")
     else:
         typewriter_effect("No answers found for this question.")
 
@@ -168,9 +167,10 @@ def search_question(keyword: str, dictionary: Dict[str, List[str]]):
 
 def answer_question(user_question: str, dictionary: Dict[str, List[str]]):
     """Provide an answer to the user's question."""
-    closest_match = find_closest_match(user_question, dictionary)
-    if closest_match:
-        answer = random.choice(dictionary[closest_match])
+    matches = find_closest_matches(user_question, dictionary)
+    if matches:
+        selected_match = random.choice(matches)
+        answer = random.choice(dictionary[selected_match])
         typewriter_effect(f"AI: {answer}")
     else:
         typewriter_effect("AI: I don't know the answer to that. Please train me.")
@@ -193,7 +193,6 @@ def main():
                 typewriter_effect("Invalid choice. Please try again.")
     except KeyboardInterrupt:
         print("\nExiting program gracefully...")
-        # Add any additional cleanup or saving tasks here if needed
         sys.exit(0)
 
 if __name__ == "__main__":
